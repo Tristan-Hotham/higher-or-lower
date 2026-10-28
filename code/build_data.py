@@ -1,7 +1,5 @@
 import csv,io,json,re,statistics,openpyxl,math
 from collections import defaultdict
-# R: folder of downloaded source files (Nomis CSVs, ONS workbooks, Electoral Commission CSV)
-# P: clones of my footpaths and sun-and-rain-uk study repos
 R='raw/'; P='repos/'
 EXCL={'E09000001','E06000053'}  # City of London, Isles of Scilly (tiny)
 # ---------- places: 2023 LADs from mid-2025 population ----------
@@ -112,7 +110,7 @@ ub=defaultdict(dict)
 for r in csv.DictReader(open(R+'nomis_ukbc_local_units.csv')): ub[r['INDUSTRY_NAME'].split(' : ')[0]][r['GEOGRAPHY_CODE']]=float(r['OBS_VALUE'])
 UY=parts['UKBC'][0]['DATE_NAME']; US='UK Business Counts (local units), ONS (via Nomis)'; UL='https://www.nomisweb.co.uk/datasets/idbr'
 for sic,id,label,q in [('56302','pubs','Pubs and bars','more pubs and bars per person'),('56103','takeaways','Takeaways','more takeaways per person'),('96020','hair','Hairdressers and beauty salons','more hairdressers and beauty salons per person'),('55100','hotels','Hotels','more hotels per person')]:
-    add(id,'High street',label+' per 10,000 people',q,'per 10,000 people','1',US,UY,{c:1e4*v/pop[c] for c,v in ub[sic].items() if c in pop},UL,dp=1)
+    add(id,'High street',label,q,'per 10,000 people','1',US,UY,{c:1e4*v/pop[c] for c,v in ub[sic].items() if c in pop},UL,dp=1)
 # ---------- life expectancy & wellbeing ----------
 wb=openpyxl.load_workbook(R+'le.xlsx',read_only=True)
 le=defaultdict(dict); per=None
@@ -179,6 +177,66 @@ add('july','Weather','July afternoons','warmer July afternoons (average daily hi
 add('jan','Weather','January afternoons','milder January afternoons (average daily high)','°C','1',MS,'1991–2020',{c:a['jan']/a['w'] for c,a in acc.items() if a['w']},ML,dp=1)
 fp=json.load(open(P+'footpaths/data/lad.json')); cols=fp['cols']
 add('paths','Land','Public rights of way','more miles of public footpath and bridleway per square mile','miles per sq mile','2','Council rights of way data via rowmaps.com; The Footpath Capital study',2026,{r[0]:r[cols.index('prow_mi')]/r[cols.index('area_sqmi')] for r in fp['rows'] if r[cols.index('area_sqmi')] and r[0][0] in 'EW' and r[cols.index('prow_mi')]/r[cols.index('area_sqmi')]>=0.05},'https://maps.tristanhotham.com/footpaths/',dp=2,note='Inner London boroughs have no definitive map and are left out')
+
+# ---------- just for fun ----------
+FUN='Just for fun'
+# census oddities (2022 LADs -> 2023)
+cf=defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+for sec in open(R+'nomis_census2021_extra_and_county_lookup.tsv').read().split('#####')[1:]:
+    k,body=sec.split('\n',1)
+    if k=='LOOKUP': continue
+    for l in body.strip().split('\n'):
+        p=l.split('\t')
+        if len(p)==3: cf[k][OLD2NEW.get(p[0],p[0])][p[1]]+=float(p[2])
+def cshare(tab,keys,per=100):
+    out={}
+    for c,dd in cf[tab].items():
+        tot=[v for kk,v in dd.items() if kk.startswith('Total')][0] if tab!='TS055' else cen['TS001'][c]['Total: All usual residents']
+        out[c]=per*sum(dd[x] for x in keys)/tot
+    return out
+add('pagan',FUN,'Pagans, Wiccans, witches and Druids','more Pagans, Wiccans, witches and Druids (per 10,000 people)','per 10,000 people','1',CS+' (religion, detailed)',2021,cshare('TS031',['Other religion: Pagan','Other religion: Wicca','Other religion: Witchcraft','Other religion: Druid'],1e4),CL,dp=1)
+add('nopass',FUN,'No passport','more people without a passport','%','pct',CS,2021,cshare('TS005',['No passport held']),CL,dp=1)
+add('irishpass',FUN,'Irish passport holders','more people with an Irish passport','%','pct',CS,2021,cshare('TS005',['Europe: Ireland']),CL,dp=2)
+add('english',FUN,'English, not British','more people who say they are English only, not British','%','pct',CS+' (national identity)',2021,{c:v for c,v in cshare('TS027',['English only identity']).items() if c[0]=='E'},CL,dp=1)
+add('holiday',FUN,'People with a holiday home','more people with a holiday home as a second address (per 1,000 people)','per 1,000 people','1',CS+' (second address)',2021,cshare('TS055',['Holiday home'],1000),CL,dp=1)
+add('caravan',FUN,'Caravan and mobile homes','more homes that are caravans or mobile homes','%','pct',CS,2021,share('TS044','A caravan or other mobile or temporary structure'),CL,dp=2)
+add('threecars',FUN,'Three-car households','more households with three or more cars','%','pct',CS,2021,share('TS045','3 or more cars or vans in household'),CL,dp=1)
+add('walk',FUN,'Walking to work','more workers who walk to work','%','pct',CS,2021,share('TS061','On foot'),CL,dp=1)
+# quirky businesses (local units)
+fb=defaultdict(dict)
+for r in csv.DictReader(open(R+'nomis_ukbc_fun_local_units.csv')): fb[r['INDUSTRY_NAME'].split(' : ')[0]][r['GEOGRAPHY_CODE']]=float(r['OBS_VALUE'])
+FS='UK Business Counts (local units), ONS (via Nomis)'
+for sic,id,label,q,per in [('11050','breweries','Breweries','more breweries (per 100,000 people)',1e5),('11010','distilleries','Distilleries','more distilleries (per 100,000 people)',1e5),
+  ('96030','funeral','Funeral directors','more funeral directors (per 100,000 people)',1e5),('96040','spas','Spas, saunas and tanning salons','more spas, saunas and tanning salons (per 100,000 people)',1e5),
+  ('47220','butchers','Butchers','more butchers (per 100,000 people)',1e5),('10710','bakers','Bakeries','more bakeries (per 100,000 people)',1e5),('47610','books','Bookshops','more bookshops (per 100,000 people)',1e5),
+  ('96010','laundry','Launderettes and dry cleaners','more launderettes and dry cleaners (per 100,000 people)',1e5),('47250','offlicence','Off-licences','more off-licences (per 100,000 people)',1e5),
+  ('90030','artists','Artists, writers and performers','more artists, writers and performers working for themselves (per 10,000 people)',1e4),('49320','taxis','Taxi firms','more taxi firms (per 10,000 people)',1e4)]:
+    unit='per 100,000 people' if per==1e5 else 'per 10,000 people'
+    add(id,FUN,label,q,unit,'1',FS,UY,{c:per*v/pop[c] for c,v in fb[sic].items() if c in pop},UL,dp=1)
+for sic,id,label,q in [('01450','sheep','Sheep farms','more sheep farms'),('01410','dairy','Dairy farms','more dairy farms')]:
+    add(id,FUN,label,q,'businesses','int',FS,UY,fb[sic],UL)
+# my own studies: count points in each council
+def incount(pts):
+    cnt=defaultdict(int)
+    for lon,lat in pts:
+        pt=Point(lon,lat)
+        for i in tree.query(pt):
+            if polys[i].contains(pt): cnt[codes[i]]+=1; break
+    return cnt
+def rows(p): return list(csv.DictReader(open(P+p)))
+GB=lambda c: c[0] in 'EWS'
+pb=rows('postbox-kings/data/postboxes.csv')
+vr=incount((float(r['lon']),float(r['lat'])) for r in pb if r['reign']=='VR')
+add('vr',FUN,"Queen Victoria's post boxes","more post boxes from Queen Victoria's reign still in use",'post boxes','int',"OpenStreetMap volunteers' records of royal cyphers; What's the King on Your Postbox? study",2026,{c:vr.get(c,0) for c in places},'https://maps.tristanhotham.com/postbox-kings/')
+rg=incount((float(r['lon']),float(r['lat'])) for r in rows('ring-the-changes/data/rings.csv') if r['country'] in ('England','Wales','Scotland','Northern Ireland') and r['lat'])
+add('bells',FUN,'Rings of church bells','more rings of bells hung for change ringing','rings of bells','int',"Dove's Guide for Church Bell Ringers; Ring the Changes study",2026,{c:rg.get(c,0) for c in places if GB(c) or c[0]=='N'},'https://maps.tristanhotham.com/ring-the-changes/')
+eq=incount((float(r['lon']),float(r['lat'])) for r in rows('british-earthquakes/data/events.csv') if r['lat'])
+add('quakes',FUN,'Earthquakes since 1382','more recorded earthquakes since 1382','earthquakes','int',"British Geological Survey catalogues; Britain's Earthquakes study",2026,{c:eq.get(c,0) for c in places if GB(c)},'https://maps.tristanhotham.com/british-earthquakes/',note='Epicentres on land within the council')
+gh=incount((float(r['lon']),float(r['lat'])) for r in rows('ghosts/data/haunted_places.csv') if r['lat'])
+add('ghosts',FUN,'Reportedly haunted places','more reportedly haunted places','haunted places','int',"Wikipedia's lists of reportedly haunted places; Haunted, or Just Old? study",2026,{c:gh.get(c,0) for c in places if GB(c)},'https://maps.tristanhotham.com/ghosts/')
+tr=incount((float(r['lon']),float(r['lat'])) for r in rows('ancient-trees/data/trees.csv') if r['lat'])
+add('trees',FUN,'Notable old trees','more notable old trees mapped','trees','int',"OpenStreetMap; Where Are Britain's Oldest Trees? study",2026,{c:tr.get(c,0) for c in places if GB(c)},'https://maps.tristanhotham.com/ancient-trees/')
+
 # ---------- output ----------
 out={'places':{c:[n,c[0]] for c,n in places.items()},'cats':cats}
 json.dump(out,open('data.json','w'),ensure_ascii=False,separators=(',',':'))

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Higher or Lower: UK places by the numbers</title>
+<meta name="description" content="A daily game of two places and one number. Which council has higher pay, more pubs, more sunshine or older people? 40 official measures for 359 councils across the UK.">
+<meta property="og:title" content="Higher or Lower: UK places by the numbers">
+<meta property="og:description" content="Two places, one number. Which is higher? A daily game built on official data for every council in the UK.">
+<meta property="og:image" content="https://maps.tristanhotham.com/higher-or-lower/header.png">
+<meta property="og:url" content="https://maps.tristanhotham.com/higher-or-lower/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141313'/%3E%3Cpath d='M9 14l7-7 7 7z' fill='%23E0473C'/%3E%3Cpath d='M9 18l7 7 7-7z' fill='%235B8BD6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --bg:#F4EFE6;--card:#FBF9F4;--fg:#141313;--muted:#5E5A54;--rule:#D9D2C4;--line:#141313;
+  --red:#B3261E;--blue:#24477F;--good:#1F7A4D;--bad:#B3261E;--chip:#ECE6DA;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;--body:"Source Serif 4",Georgia,"Times New Roman",serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1B1A19;--card:#242322;--fg:#F1EEE8;--muted:#B3ADA4;--rule:#3A3836;--line:#F1EEE8;--red:#E0473C;--blue:#5B8BD6;--good:#4FBF83;--bad:#E8655B;--chip:#2E2C2A}}
+:root[data-theme="dark"]{--bg:#1B1A19;--card:#242322;--fg:#F1EEE8;--muted:#B3ADA4;--rule:#3A3836;--line:#F1EEE8;--red:#E0473C;--blue:#5B8BD6;--good:#4FBF83;--bad:#E8655B;--chip:#2E2C2A}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.5 var(--body)}
+a{color:inherit}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 16px 40px}
+.kick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:600 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kick b{background:var(--fg);color:var(--bg);padding:5px 8px;font-weight:600}
+h1{font:900 clamp(44px,9vw,84px)/.92 var(--display);letter-spacing:-.02em;margin:14px 0 10px}
+h1 .hi{color:var(--red)}h1 .lo{color:var(--blue)}
+.lede{font-size:clamp(17px,2.2vw,20px);max-width:640px;margin:0 0 18px}
+.tabs{display:flex;gap:0;border:2px solid var(--line);width:max-content;max-width:100%;margin:6px 0 18px}
+.tabs button{font:600 13px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--fg);border:0;padding:12px 16px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.tabs button:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border-top:3px solid var(--line);padding-top:12px;margin-bottom:12px;font:500 13px/1.3 var(--mono)}
+.dots{display:flex;gap:6px}
+.dots i{width:14px;height:14px;border:2px solid var(--line);display:block}
+.dots i.g{background:var(--good);border-color:var(--good)}.dots i.b{background:var(--bad);border-color:var(--bad)}.dots i.c{background:var(--fg)}
+.streak{font-weight:600}
+.q{min-height:3.6em}
+.grp{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;background:var(--chip);padding:6px 8px;margin-bottom:8px}
+.q h2{font:800 clamp(24px,4vw,36px)/1.12 var(--display);margin:0}
+.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin:16px 0 14px}
+.vs{align-self:center;font:900 22px/1 var(--display);color:var(--muted)}
+.opt{position:relative;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:190px;padding:18px 18px 16px;background:var(--card);color:var(--fg);border:3px solid var(--line);box-shadow:8px 8px 0 var(--red);cursor:pointer;font:inherit;transition:transform .12s,box-shadow .12s}
+.opt.b{box-shadow:8px 8px 0 var(--blue)}
+.opt:hover:not(:disabled),.opt:focus-visible{transform:translate(3px,3px);box-shadow:5px 5px 0 var(--red);outline:none}
+.opt.b:hover:not(:disabled),.opt.b:focus-visible{box-shadow:5px 5px 0 var(--blue)}
+.opt:disabled{cursor:default}
+.nm{font:800 clamp(24px,3.6vw,34px)/1.05 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+.na{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.val{margin-top:18px;min-height:2.4em}
+.num{font:900 clamp(30px,5vw,44px)/1 var(--display)}
+.unit{font:500 13px/1.3 var(--mono);color:var(--muted);margin-top:4px}
+.rank{font:500 12.5px/1.3 var(--mono);color:var(--muted);margin-top:6px}
+.tap{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.opt.win{border-color:var(--good)}
+.opt.pick.right::after,.opt.pick.wrong::after{position:absolute;top:12px;right:14px;font:900 28px/1 var(--display)}
+.opt.pick.right::after{content:"✓";color:var(--good)}.opt.pick.wrong::after{content:"✗";color:var(--bad)}
+.verdict{min-height:1.6em;font:800 22px/1.2 var(--display);margin:4px 0 4px}
+.verdict.g{color:var(--good)}.verdict.b{color:var(--bad)}
+.why{font-size:15px;color:var(--muted);margin:0 0 14px;min-height:1.5em}
+.why a{color:var(--fg)}
+.go{font:600 14px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--fg);color:var(--bg);border:2px solid var(--fg);padding:14px 22px;cursor:pointer}
+.go:hover,.go:focus-visible{background:var(--red);border-color:var(--red);color:#FAF8F4;outline:none}
+.go.ghost{background:transparent;color:var(--fg)}
+.go.ghost:hover,.go.ghost:focus-visible{background:var(--fg);color:var(--bg)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.filters button{font:500 12px/1 var(--mono);background:var(--chip);color:var(--fg);border:2px solid transparent;padding:8px 10px;cursor:pointer}
+.filters button[aria-pressed="true"]{border-color:var(--line);background:var(--card);font-weight:600}
+.end{border:3px solid var(--line);background:var(--card);padding:22px 20px;box-shadow:8px 8px 0 var(--blue);margin:8px 0 18px}
+.end h2{font:900 clamp(30px,5vw,44px)/1 var(--display);margin:0 0 8px}
+.grid{font-size:26px;letter-spacing:2px;margin:8px 0 12px}
+.small{font:500 13px/1.4 var(--mono);color:var(--muted)}
+.recap{list-style:none;padding:0;margin:14px 0 16px;font-size:15px}
+.recap li{padding:8px 0;border-top:1px solid var(--rule)}
+.recap b{font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);font:600 13px/1 var(--mono);padding:12px 16px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+section.about{margin-top:46px;border-top:3px solid var(--line);padding-top:18px}
+section.about h2{font:800 28px/1.15 var(--display);margin:0 0 8px}
+section.about h3{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin:22px 0 8px}
+.src{width:100%;border-collapse:collapse;font-size:14.5px}
+.src td{padding:7px 8px 7px 0;border-top:1px solid var(--rule);vertical-align:top}
+.src td:first-child{width:38%;font-weight:600}
+.src td:last-child{color:var(--muted)}
+.byline{font:400 12.5px/1.6 var(--mono);color:var(--muted);border-top:3px double var(--rule);margin-top:26px;padding-top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:640px){
+  .pair{grid-template-columns:1fr;gap:10px}
+  .vs{justify-self:center;margin:-2px 0}
+  .opt{min-height:0;padding:14px 14px 12px;box-shadow:6px 6px 0 var(--red)}
+  .opt.b{box-shadow:6px 6px 0 var(--blue)}
+  .val{margin-top:10px;min-height:0}
+  .q{min-height:0}
+  .lede{font-size:16px;margin-bottom:12px}
+  h1{margin:10px 0 8px}
+  .nm{font-size:24px}
+  .num{font-size:30px}
+  .tap{display:none}
+}
+@media (prefers-reduced-motion:reduce){.opt{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kick"><b>Daily game</b><span>UK councils, by the numbers</span></div>
+  <h1><span class="hi">Higher</span> or <span class="lo">Lower</span></h1>
+  <p class="lede">Two places, one number. Pick the one that's higher. Pay, pubs, sunshine, house prices, the Leave vote and more: 40 official measures for every council in the UK.</p>
+
+  <div class="tabs" role="group" aria-label="Game mode">
+    <button type="button" id="tDaily" aria-pressed="true">Today's 10</button>
+    <button type="button" id="tEndless" aria-pressed="false">Endless</button>
+  </div>
+
+  <div id="filters" class="filters" role="group" aria-label="Topics for endless mode" hidden></div>
+
+  <div id="game">
+    <div class="bar"><div class="dots" id="dots" aria-hidden="true"></div><div class="streak" id="status"></div></div>
+    <div class="q"><span class="grp" id="grp"></span><h2 id="question">Loading…</h2></div>
+    <div class="pair">
+      <button type="button" class="opt a" id="optA" disabled><div><div class="nm" id="nmA"></div><div class="na" id="naA"></div></div><div class="val" id="valA"><span class="tap">Tap to pick</span></div></button>
+      <div class="vs" aria-hidden="true">or</div>
+      <button type="button" class="opt b" id="optB" disabled><div><div class="nm" id="nmB"></div><div class="na" id="naB"></div></div><div class="val" id="valB"><span class="tap">Tap to pick</span></div></button>
+    </div>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+    <p class="why" id="why"></p>
+    <div class="row"><button type="button" class="go" id="next" hidden>Next</button></div>
+  </div>
+
+  <div id="end" hidden></div>
+
+  <section class="about" aria-labelledby="ab">
+    <h2 id="ab">Where the numbers come from</h2>
+    <p>Every place is a council (local authority district or unitary authority) as it stood in April 2023, so merged councils such as North Yorkshire and Somerset count as one. The figures are the latest official ones for each council. Census measures cover England and Wales, so Scottish and Northern Irish councils only meet questions that cover them. The City of London and the Isles of Scilly are left out because they are so small. Pairs that are too close to call are never asked.</p>
+    <div id="sources"></div>
+  </section>
+
+  <p class="byline">Dr Tristan Hotham, Independent researcher · 2026 · Data: ONS and Nomis (Census 2021, population estimates, ASHE, household income, house prices, life expectancy, well-being, UK Business Counts); Electoral Commission; Met Office HadUK-Grid; council rights of way data via rowmaps.com. Contains public sector information licensed under the Open Government Licence v3.0. <a href="https://github.com/Tristan-Hotham/higher-or-lower">Data and code</a></p>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var LAUNCH=Date.UTC(2026,9,28), ROUNDS=10, URL_SHORT="maps.tristanhotham.com/higher-or-lower";
+var D=null, CATS=[], BY={}, mode="daily", st=null, filter="All";
+var $=function(id){return document.getElementById(id)};
+var store={get:function(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function dayNo(key){var p=key.split("-");return Math.round((Date.UTC(+p[0],p[1]-1,+p[2])-LAUNCH)/864e5)+1}
+function NAT(c){return {E:"England",W:"Wales",S:"Scotland",N:"Northern Ireland"}[c]}
+function ord(n){var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+
+function fmt(c,x){
+  var n;
+  if(c.fmt==="gbp") n="£"+Math.round(x).toLocaleString("en-GB");
+  else if(c.fmt==="pct") n=x.toFixed(1)+"%";
+  else if(c.fmt==="int") n=Math.round(x).toLocaleString("en-GB");
+  else if(c.fmt==="1") n=x.toFixed(1);
+  else n=x.toFixed(2);
+  return n;
+}
+function unitLine(c){return (c.fmt==="pct"||c.fmt==="gbp"&&c.unit==="£")?"":c.unit}
+function question(c){return (c.id==="leave"||c.id==="turnout"?"Which had ":"Which has ")+c.q+"?"}
+
+function prep(){
+  CATS=D.cats;
+  CATS.forEach(function(c){
+    var keys=Object.keys(c.v).sort(function(a,b){return c.v[b]-c.v[a]});
+    c.keys=keys;c.rank={};keys.forEach(function(k,i){c.rank[k]=i+1});
+    var vals=keys.map(function(k){return c.v[k]});c.spread=vals[Math.floor(vals.length*.1)]-vals[Math.floor(vals.length*.9)];
+    BY[c.id]=c;
+  });
+}
+// pick a pair whose ranks differ by between lo and hi (as share of n), never a tie in display
+function pickPair(c,r,lo,hi,avoid){
+  var n=c.keys.length,minGap=Math.max(2,Math.round(n*lo)),maxGap=Math.max(minGap+1,Math.round(n*hi));
+  for(var t=0;t<200;t++){
+    var i=Math.floor(r()*n),gap=minGap+Math.floor(r()*(maxGap-minGap+1)),j=r()<.5?i+gap:i-gap;
+    if(j<0||j>=n)continue;
+    var a=c.keys[i],b=c.keys[j];
+    if(avoid&&(avoid[a]||avoid[b]))continue;
+    if(fmt(c,c.v[a])===fmt(c,c.v[b]))continue;
+    if(Math.abs(c.v[a]-c.v[b])<c.spread*.04)continue;
+    return r()<.5?[a,b]:[b,a];
+  }
+  return [c.keys[0],c.keys[n-1]];
+}
+function dailyRounds(key){
+  var r=rng(hash("hol-"+key)),pool=CATS.slice(),out=[],used={},lastG=null;
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(r()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t}
+  var groupsUsed={};
+  while(out.length<ROUNDS&&pool.length){
+    var idx=pool.findIndex(function(c){return c.group!==lastG&&(groupsUsed[c.group]||0)<2});
+    if(idx<0)idx=0;
+    var c=pool.splice(idx,1)[0];lastG=c.group;groupsUsed[c.group]=(groupsUsed[c.group]||0)+1;
+    var p=pickPair(c,r,.08,.42,used);used[p[0]]=used[p[1]]=1;
+    out.push({c:c.id,a:p[0],b:p[1]});
+  }
+  return out;
+}
+function endlessRound(){
+  var pool=CATS.filter(function(c){return filter==="All"||c.group===filter});
+  var r=Math.random,c;
+  do{c=pool[Math.floor(r()*pool.length)]}while(pool.length>1&&st.last&&c.id===st.last);
+  st.last=c.id;
+  var s=st.streak,hi=Math.max(.07,.5-s*.035),lo=Math.max(.012,.14-s*.012);
+  var p=pickPair(c,r,lo,hi,null);
+  return {c:c.id,a:p[0],b:p[1]};
+}
+
+function setMode(m){
+  mode=m;$("tDaily").setAttribute("aria-pressed",m==="daily");$("tEndless").setAttribute("aria-pressed",m==="endless");
+  $("filters").hidden=m!=="endless";
+  if(m==="daily")startDaily();else startEndless();
+}
+function startDaily(){
+  var key=today(),saved=store.get("hol-d-"+key);
+  st={key:key,rounds:dailyRounds(key),i:0,res:[]};
+  if(saved&&saved.res&&saved.res.length>=ROUNDS){st.res=saved.res;st.i=ROUNDS;return showDailyEnd(true)}
+  if(saved&&saved.res){st.res=saved.res;st.i=saved.res.length}
+  $("end").hidden=true;$("game").hidden=false;show();
+}
+function startEndless(){
+  st={streak:0,last:null,best:store.get("hol-best")||0};
+  $("end").hidden=true;$("game").hidden=false;st.cur=endlessRound();show();
+}
+function cur(){return mode==="daily"?st.rounds[st.i]:st.cur}
+
+function show(){
+  var R=cur(),c=BY[R.c];
+  $("grp").textContent=c.group;$("question").textContent=question(c);
+  [["A",R.a],["B",R.b]].forEach(function(x){
+    var o=$("opt"+x[0]);o.disabled=false;o.className="opt "+(x[0]==="A"?"a":"b");
+    $("nm"+x[0]).textContent=D.places[x[1]][0];$("na"+x[0]).textContent=NAT(D.places[x[1]][1]);
+    $("val"+x[0]).innerHTML='<span class="tap">Tap to pick</span>';
+    o.setAttribute("aria-label",D.places[x[1]][0]+", "+NAT(D.places[x[1]][1]));
+  });
+  $("verdict").textContent="";$("verdict").className="verdict";$("why").innerHTML="";$("next").hidden=true;
+  status();
+  var qb=$("grp").getBoundingClientRect();if(qb.top<0)window.scrollBy({top:qb.top-12});
+}
+function status(){
+  var d=$("dots");d.innerHTML="";
+  if(mode==="daily"){
+    for(var i=0;i<ROUNDS;i++){var e=document.createElement("i");if(i<st.res.length)e.className=st.res[i]?"g":"b";else if(i===st.i)e.className="c";d.appendChild(e)}
+    $("status").textContent="Day "+dayNo(st.key)+" · "+Math.min(st.i+1,ROUNDS)+" of "+ROUNDS;
+  }else{
+    $("status").textContent="Streak "+st.streak+" · Best "+st.best;
+  }
+}
+function countUp(el,c,to){
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){el.textContent=fmt(c,to);return}
+  var t0=null,dur=650;
+  function f(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=fmt(c,to*e);if(k<1)requestAnimationFrame(f);else el.textContent=fmt(c,to)}
+  requestAnimationFrame(f);
+}
+function pick(side){
+  var R=cur(),c=BY[R.c];if($("optA").disabled)return;
+  var va=c.v[R.a],vb=c.v[R.b],winner=va>vb?"A":"B",ok=side===winner;
+  ["A","B"].forEach(function(s){
+    var code=s==="A"?R.a:R.b,o=$("opt"+s);o.disabled=true;
+    if(s===winner)o.classList.add("win");
+    if(s===side)o.classList.add("pick",ok?"right":"wrong");
+    var u=unitLine(c);
+    $("val"+s).innerHTML='<div class="num"></div>'+(u?'<div class="unit">'+u+'</div>':"")+'<div class="rank">'+ord(c.rank[code])+" of "+c.keys.length+"</div>";
+    countUp($("val"+s).querySelector(".num"),c,c.v[code]);
+  });
+  var wn=D.places[winner==="A"?R.a:R.b][0];
+  $("verdict").textContent=ok?"Right. "+wn+" is higher.":"Not this time. It's "+wn+".";
+  $("verdict").className="verdict "+(ok?"g":"b");
+  $("why").innerHTML=esc(c.label)+(c.note?" ("+esc(c.note)+")":"")+". Ranked out of "+c.keys.length+" councils. Source: "+(c.link?'<a href="'+c.link+'" target="_blank" rel="noopener">'+esc(c.source)+"</a>":esc(c.source))+", "+esc(c.year)+".";
+  if(mode==="daily"){
+    st.res.push(ok?1:0);st.i++;store.set("hol-d-"+st.key,{res:st.res});
+    $("next").textContent=st.i>=ROUNDS?"See your score":"Next";
+  }else{
+    if(ok){st.streak++;if(st.streak>st.best){st.best=st.streak;store.set("hol-best",st.best)}$("next").textContent="Next"}
+    else{$("next").textContent="See your streak";st.over=true}
+  }
+  status();$("next").hidden=false;$("next").focus({preventScroll:true});var nb=$("next").getBoundingClientRect();if(nb.bottom>innerHeight-10)window.scrollBy({top:nb.bottom-innerHeight+24,behavior:"smooth"});
+}
+function next(){
+  if(mode==="daily"){if(st.i>=ROUNDS)return showDailyEnd(false);show()}
+  else{if(st.over)return showEndlessEnd();st.cur=endlessRound();show()}
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function grid(res){return res.map(function(x){return x?"🟩":"🟥"}).join("")}
+function untilMidnight(){var n=new Date(),m=new Date(n);m.setHours(24,0,0,0);var s=Math.round((m-n)/1000);return Math.floor(s/3600)+"h "+Math.floor(s%3600/60)+"m"}
+function showDailyEnd(again){
+  var score=st.res.reduce(function(a,b){return a+b},0),no=dayNo(st.key);
+  var msg=score===10?"Perfect.":score>=8?"Very good.":score>=6?"Not bad.":score>=4?"Tricky one.":"The numbers won today.";
+  var recap=st.rounds.map(function(R,i){var c=BY[R.c],w=c.v[R.a]>c.v[R.b]?R.a:R.b,l=w===R.a?R.b:R.a;
+    return "<li>"+(st.res[i]?"🟩":"🟥")+" <b>"+esc(c.label)+"</b>: "+esc(D.places[w][0])+" "+fmt(c,c.v[w])+(c.fmt==="pct"||c.fmt==="gbp"?"":" "+esc(c.unit))+" beat "+esc(D.places[l][0])+" "+fmt(c,c.v[l])+"</li>"}).join("");
+  st.share="Higher or Lower #"+no+"\n"+grid(st.res)+" "+score+"/10\n"+URL_SHORT;
+  $("game").hidden=true;$("end").hidden=false;
+  $("end").innerHTML='<div class="end"><p class="small">Day '+no+(again?" · already played today":"")+'</p><h2>'+score+' out of 10. '+msg+'</h2><div class="grid" aria-label="'+score+' right out of 10">'+grid(st.res)+'</div><div class="row"><button type="button" class="go" id="share">Share</button><button type="button" class="go ghost" id="toEndless">Play endless</button></div><p class="small" style="margin-top:12px">A new set of ten in '+untilMidnight()+'.</p><ul class="recap">'+recap+'</ul></div>';
+  $("share").onclick=share;$("toEndless").onclick=function(){setMode("endless")};if(!again)$("end").scrollIntoView({block:"start",behavior:"smooth"});
+}
+function showEndlessEnd(){
+  var s=st.streak;
+  st.share="Higher or Lower: endless\n🔥 Streak of "+s+(filter!=="All"?" on "+filter:"")+"\n"+URL_SHORT;
+  $("game").hidden=true;$("end").hidden=false;
+  $("end").innerHTML='<div class="end"><p class="small">Endless'+(filter!=="All"?" · "+esc(filter):"")+'</p><h2>Streak of '+s+'.</h2><p class="small">Your best: '+st.best+'. It gets harder as you go: the pairs get closer.</p><div class="row" style="margin-top:14px"><button type="button" class="go" id="again">Play again</button><button type="button" class="go ghost" id="share">Share</button></div></div>';
+  $("again").onclick=startEndless;$("share").onclick=share;$("again").focus({preventScroll:true});$("end").scrollIntoView({block:"start",behavior:"smooth"});
+}
+function toast(t){var e=$("toast");e.textContent=t;e.classList.add("on");setTimeout(function(){e.classList.remove("on")},1800)}
+function share(){
+  var t=st.share;
+  if(navigator.share&&/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)){navigator.share({text:t}).catch(function(){});return}
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast("Copied: paste it anywhere")},function(){prompt("Copy this:",t)});
+  else prompt("Copy this:",t);
+}
+function filtersUI(){
+  var groups=["All"];CATS.forEach(function(c){if(groups.indexOf(c.group)<0)groups.push(c.group)});
+  var f=$("filters");f.innerHTML="";
+  groups.forEach(function(g){var b=document.createElement("button");b.type="button";b.textContent=g;b.setAttribute("aria-pressed",g===filter);
+    b.onclick=function(){filter=g;filtersUI();startEndless()};f.appendChild(b)});
+}
+function sourcesUI(){
+  var groups={};CATS.forEach(function(c){(groups[c.group]=groups[c.group]||[]).push(c)});
+  var h="";Object.keys(groups).forEach(function(g){
+    h+="<h3>"+esc(g)+'</h3><table class="src"><tbody>'+groups[g].map(function(c){
+      return "<tr><td>"+esc(c.label)+"</td><td>"+(c.link?'<a href="'+c.link+'" target="_blank" rel="noopener">'+esc(c.source)+"</a>":esc(c.source))+", "+esc(c.year)+(c.note?". "+esc(c.note):"")+" · "+c.keys.length+" councils</td></tr>"}).join("")+"</tbody></table>"});
+  $("sources").innerHTML=h;
+}
+$("optA").onclick=function(){pick("A")};$("optB").onclick=function(){pick("B")};$("next").onclick=next;
+$("tDaily").onclick=function(){setMode("daily")};$("tEndless").onclick=function(){setMode("endless")};
+document.addEventListener("keydown",function(e){
+  if(e.target.closest&&e.target.closest("input,textarea"))return;
+  if(!$("game").hidden&&!$("optA").disabled){if(e.key==="ArrowLeft"||e.key==="1"){pick("A");e.preventDefault()}else if(e.key==="ArrowRight"||e.key==="2"){pick("B");e.preventDefault()}}
+});
+fetch("data.json").then(function(r){return r.json()}).then(function(d){D=d;prep();filtersUI();sourcesUI();
+  if(/[?&]mode=endless/.test(location.search))setMode("endless");else setMode("daily")})
+.catch(function(){$("question").textContent="Sorry, the data didn't load. Try refreshing."});
+})();
+</script>
+<script src="/assets/site-nav.js" defer></script>
+</body>
+</html>
